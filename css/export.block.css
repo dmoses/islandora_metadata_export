@@ -1,0 +1,12 @@
+.not_available {
+  display: inline;
+  margin-left: 10px;
+  background-color: lightcoral;
+  padding: 1px 8px;
+  border-radius: 4.5px;
+  color: white;
+}
+
+.not_available a {
+  color: white;
+}

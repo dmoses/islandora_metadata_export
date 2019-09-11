@@ -1,0 +1,322 @@
+<?php
+
+/**
+ * Implements hook_init().
+ */
+function  citation_exporter_extra_init() {
+  // Load block definition
+  module_load_include('inc', 'citation_exporter_extra', 'includes/blocks/export.block');
+}
+
+/**
+ * Implements hook_help().
+ */
+function citation_exporter_extra_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#citation_exporter_extra':
+      return '<p>' .   t('Enables stream downloads from object data streams thought the use of bibutils and easyrdf')  . '</p>';
+      break;
+    default;
+  }
+}
+
+/**
+ *  Implements hook_mods_download_format_alter
+ * @param $formats
+ * @return array
+ */
+function citation_exporter_extra_mods_download_format_alter(&$formats) {
+  $formats = array_merge($formats, array(
+    'BibTex' => array(
+      'url' => 'islandora/object/[fedora:pid]/download_mods_as_bibtext',
+      'title' => "Compatible with Zotero"
+    ),
+    'EndNote' => array(
+      'url' => 'islandora/object/[fedora:pid]/download_mods_as_endnote',
+      'title' => "Compatible with EndNote"
+    ),
+    'MARC' => array(
+      'url' => 'islandora/object/[fedora:pid]/download_mods_as_marc'
+    ),
+    'MARCXML' => array(
+      'url' => 'islandora/object/[fedora:pid]/download_mods_as_marcxml',
+      'title' => 'Compatible with XML viewers'
+    ),
+    'DublinCore' => array(
+      'url' => 'islandora/object/[fedora:pid]/datastream/DC/download',
+      'title' => 'Compatible with XML viewers'
+    ),
+    'RIS' => array(
+      'url' => 'islandora/object/[fedora:pid]/download_mods_as_ris',
+      'title' => "Compatible with EndNote, Refworks, Zotero, and Reference Manager"
+    ),
+    //'JSON',
+    'JSON' => array(
+      'url' => 'islandora/object/[fedora:pid]/download_mods_as_json',
+      'title' => 'Compatible with Zotero'
+    ),
+  ));
+
+  return $formats;
+}
+
+/**
+ * @param IslandoraFedoraObject|bool $object
+ *
+ * @return array|bool
+ */
+function citation_exporter_extra_get_export_formats($object = FALSE) {
+
+  $format_links = array();
+  $formats = array();
+
+  $enabled_options = variable_get('islandora_export_formats_available_options', []);
+  // Pull download formats from other modules whereas possible
+  drupal_alter('mods_download_format', $formats);
+  // If this is an object, a fedora Object
+  if (is_object($object) && $object instanceof FedoraObject) {
+    foreach ($formats as $format => $value) {
+      if (isset($enabled_options[$format]) && !empty($enabled_options[$format])) {
+        $format_links[] = l($format, url(token_replace($value['url'], array('fedora' => $object))), array(
+          'attributes' => array (
+            'title' => (isset($value['title'])) ? $value['title'] : ''
+          )
+        ));
+      }
+    }
+    return $format_links;
+  }
+  return $formats;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function citation_exporter_extra_menu() {
+  return array(
+    'islandora/object/%islandora_object/download_mods_as_marc' => array(
+      'title' => 'Download MARC',
+      'type' => MENU_CALLBACK,
+      'page callback' => 'citation_exporter_extra_xml_download_mods_to_marc',
+      'page arguments' => array(2),
+      'delivery callback' => 'citation_exporter_extra_download',
+      'access callback' => 'citation_exporter_extra_access_callback',
+      'access arguments' => array(2)
+    ),
+    'islandora/object/%islandora_object/download_mods_as_endnote' => array(
+      'title' => 'Download EndNoteXml',
+      'type' => MENU_CALLBACK,
+      'page callback' => 'citation_exporter_extra_xml_download_mods_to_format',
+      'page arguments' => array(2, 'MODS', 'EndNote'),
+      'delivery callback' => 'citation_exporter_extra_download',
+      'access callback' => 'citation_exporter_extra_access_callback',
+      'access arguments' => array(2)
+    ),
+
+    'islandora/object/%islandora_object/download_mods_as_bibtext' => array(
+      'title' => 'Download BibText',
+      'type' => MENU_CALLBACK,
+      'page callback' => 'citation_exporter_extra_xml_download_mods_to_format',
+      'page arguments' => array(2, 'MODS', 'BibTeX'),
+      'delivery callback' => 'citation_exporter_extra_download',
+      'access callback' => 'citation_exporter_extra_access_callback',
+      'access arguments' => array(2)
+    ),
+    'islandora/object/%islandora_object/download_mods_as_ris' => array(
+      'title' => 'Download RIS',
+      'type' => MENU_CALLBACK,
+      'page callback' => 'citation_exporter_extra_xml_download_mods_to_format',
+      'page arguments' => array(2, 'MODS', 'RIS'),
+      'delivery callback' => 'citation_exporter_extra_download',
+      'access callback' => 'citation_exporter_extra_access_callback',
+      'access arguments' => array(2)
+    ),
+    'islandora/object/%islandora_object/download_mods_as_json' => array(
+      'title' => 'Download JSON',
+      'type' => MENU_CALLBACK,
+      'page callback' => 'citation_exporter_extra_xml_download_mods_to_json',
+      'page arguments' => array(2),
+      'delivery callback' => 'citation_exporter_extra_download',
+      'access callback' => 'citation_exporter_extra_access_callback',
+      'access arguments' => array(2)
+    ),
+  );
+}
+
+/**
+ * Prepares  a fedora object with a MODS stream to JSON
+ *
+ * @param \FedoraObject $object
+ *
+ * @return string
+ */
+function citation_exporter_extra_xml_download_mods_to_json($object) {
+  module_load_include('inc', 'citeproc', 'includes/converter');
+  $ds = $object->getDatastream('MODS');
+  $raw = convert_mods_to_citeproc_jsons($ds->content);
+  if ($raw) {
+    $raw_json = json_encode($raw);
+    if ($raw_json) {
+      return $raw_json;
+    }
+  }
+  drupal_not_found();
+}
+/**
+ * Access callback.
+ *
+ * Requires that the given object contains a MODS datastream (and to be
+ * viewable, as per the stock permissions).
+ *
+ * @param AbstractObject $object
+ *   The object to test, if NULL the given object doesn't exist or is
+ *   inaccessible.
+ *
+ * @return bool
+ *   TRUE if the user is allowed to access the object, FALSE
+ *   otherwise.
+ */
+function citation_exporter_extra_access_callback($object) {
+  return is_object($object) && isset($object['MODS']) && islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $object['MODS']);
+}
+
+/**
+ *
+ * Converts an object MODS datastream to marcXML for download
+ *
+ * @param $object \FedoraObject
+ *
+ * @return string
+ */
+function citation_exporter_extra_xml_download_mods_to_marc($object) {
+  $base_module = 'islandora_marcxml';
+  if (citation_exporter_extra_access_callback($object)) {
+    if (!module_exists($base_module)) {
+      // MarcXML is NOT enabled, try to enable it
+      if (module_enable(array($base_module))) {
+        module_load_include('inc', $base_module, 'includes/utilities');
+        $ob = islandora_marcxml_transform_marc_to_html($object);
+        module_disable(array($base_module));
+        return $ob;
+      }
+    }
+  } else {
+    drupal_access_denied();
+  }
+}
+
+/**
+ *
+ * Downloads a MODS datastream into the $to format, and returns a file in the
+ * system
+ *
+ * @param \FedoraObject $object
+ *
+ * @param $from
+ * @param $to
+ *
+ * @return false|string|void
+ */
+function citation_exporter_extra_xml_download_mods_to_format($object, $from, $to) {
+  module_load_include('inc', 'citation_exporter_extra', 'includes/utilities');
+
+    /**
+   * @var \IslandoraFedoraDatastream $ds
+   */
+    $ds = $object->getDatastream('MODS');
+    $enxml_file = file_save_data($ds->content, "temporary://temp_en" . $object->id);
+    $enxml_file->status &= ~FILE_STATUS_PERMANENT;
+    file_save($enxml_file);
+    $mods_file = drupal_tempnam('temporary://', 'temp_mods' . $object->id);
+
+    $res = BibutilsExtra::Convert(
+      drupal_realpath($enxml_file->uri),
+      $from,
+      drupal_realpath($mods_file),
+      $to
+    );
+
+    if ($res) {
+      $to_return = file_get_contents($mods_file);
+      file_unmanaged_delete($enxml_file);
+      file_unmanaged_delete($mods_file);
+      return $to_return;
+    }
+    else {
+      drupal_not_found();
+    }
+}
+
+/**
+ * Delivery callback used to download the output as XML.
+ *
+ * @param string $output
+ *   The content to download.
+ */
+function citation_exporter_extra_download($output) {
+  $key = arg(3);
+  $object = arg(2);
+  $name = 'export';
+  // If this object has a valid label let's use it to generate our download file
+  if ($object) {
+    $fedora_object = islandora_object_load($object);
+    $name = $fedora_object->label;
+  }
+  drupal_add_http_header('Content-length', strlen($output));
+  drupal_add_http_header('Content-type', 'text/plain;charset=utf8');
+  switch ($key) {
+    case 'download_mods_as_marc':
+      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.marc.html\"");
+      break;
+    case 'download_mods_as_bibtext':
+    case 'download_mods_as_format':
+      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.bibText.bib\"");
+      break;
+    case 'download_mods_as_endnote':
+      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.endNote.end\"");
+      break;
+    case 'download_mods_as_ris':
+      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.RIS.ris\"");
+      break;
+    case 'download_mods_as_json':
+      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.JSON.json\"");
+      break;
+    default:
+      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.export\"");
+  }
+
+  print $output;
+  drupal_page_footer();
+}
+
+/**
+ * Implements hook_theme().
+ */
+function citation_exporter_extra_theme($existing, $type, $theme, $path) {
+  return array(
+    'islandora_export_available_formats' => array(
+      'template' => 'object--export_available_formats',
+      //'function' => 'theme_islandora_export_available_formats',
+      'path' => drupal_get_path('module', 'citation_exporter_extra') . '/templates',
+      'variables' => array (
+        'object' => NULL,
+        'formats' => citation_exporter_extra_get_export_formats()
+      )
+    )
+  );
+}
+
+/**
+ * Generates the HTML that will be used with the block
+ * Implements hook preprocess_islandora_export_available_formats
+ * @param $variables
+ */
+function citation_exporter_extra_preprocess_islandora_export_available_formats(&$variables) {
+  //$generate a list of potential new values!
+  $variables['available_formats'] = theme_item_list([
+    'items' => citation_exporter_extra_get_export_formats($variables['object']),
+    'title' => 'Available Formats',
+    'type' => 'ul',
+    'attributes' => [],
+  ]);
+}

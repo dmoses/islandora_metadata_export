@@ -1,0 +1,7 @@
+name = Islandora Export Extra
+description = Exports a collection of objects to several formats (JSON, EndNote, RIS, BibText, etc) file.
+package = Islandora Solution Packs
+core = 7.x
+php = 5.2
+
+dependencies[] = citation_exporter
