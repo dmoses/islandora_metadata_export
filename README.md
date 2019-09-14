@@ -31,7 +31,7 @@ Install as usual, see [this](https://drupal.org/documentation/install/modules-th
 
 ## Configuration
 
-Enable the module via Administration » Modules (admin/modules). Place the block on the desired pages, and enable the formats that users can export to from the block configuration page. Users need to have permission to view MODs and RDF data streams to download.
+Enable the module via Administration » Modules (admin/modules). Place the block on the desired pages, and enable the formats that users can export to from the block configuration page. Users need to have permission to view MODs and RDF data streams to download.   
 
 ## Troubleshooting/Issues
 
