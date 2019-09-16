@@ -190,15 +190,23 @@ function citation_exporter_extra_access_callback($object) {
  */
 function citation_exporter_extra_xml_download_mods_to_marc($object) {
   $base_module = 'islandora_marcxml';
+  $marc = function() use ($base_module, $object) {
+    module_load_include('inc', $base_module, 'includes/utilities');
+    return islandora_marcxml_transform_marc_to_html($object);
+  };
   if (citation_exporter_extra_access_callback($object)) {
     if (!module_exists($base_module)) {
       // MarcXML is NOT enabled, try to enable it
       if (module_enable(array($base_module))) {
-        module_load_include('inc', $base_module, 'includes/utilities');
-        $ob = islandora_marcxml_transform_marc_to_html($object);
+        $ob = $marc();
         module_disable(array($base_module));
         return $ob;
+      } else {
+        // We can't enable the module, abort
       }
+    } else {
+      // Module already enabled
+      return $marc();
     }
   } else {
     drupal_access_denied();
@@ -224,10 +232,12 @@ function citation_exporter_extra_xml_download_mods_to_format($object, $from, $to
    * @var \IslandoraFedoraDatastream $ds
    */
     $ds = $object->getDatastream('MODS');
-    $enxml_file = file_save_data($ds->content, "temporary://temp_en" . $object->id);
+    // Set unique name to  avoid errors when downloading several files from the same object
+    $t_name = time();
+    $enxml_file = file_save_data($ds->content, "temporary://temp_en_{$t_name}_{$object->id}");
     $enxml_file->status &= ~FILE_STATUS_PERMANENT;
     file_save($enxml_file);
-    $mods_file = drupal_tempnam('temporary://', 'temp_mods' . $object->id);
+    $mods_file = drupal_tempnam('temporary://', "temp_mods_{$t_name}_{$object->id}");
 
     $res = BibutilsExtra::Convert(
       drupal_realpath($enxml_file->uri),
@@ -238,7 +248,8 @@ function citation_exporter_extra_xml_download_mods_to_format($object, $from, $to
 
     if ($res) {
       $to_return = file_get_contents($mods_file);
-      file_unmanaged_delete($enxml_file);
+      $f_path = $enxml_file->uri;
+      file_unmanaged_delete($f_path);
       file_unmanaged_delete($mods_file);
       return $to_return;
     }
