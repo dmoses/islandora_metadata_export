@@ -281,16 +281,16 @@ function citation_exporter_extra_download($output) {
       break;
     case 'download_mods_as_bibtext':
     case 'download_mods_as_format':
-      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.bibText.bib\"");
+      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.bib\"");
       break;
     case 'download_mods_as_endnote':
-      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.endNote.end\"");
+      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.end\"");
       break;
     case 'download_mods_as_ris':
-      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.RIS.ris\"");
+      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.ris\"");
       break;
     case 'download_mods_as_json':
-      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.JSON.json\"");
+      drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.json\"");
       break;
     default:
       drupal_add_http_header('Content-Disposition', "attachment; filename=\"{$name}.export\"");
