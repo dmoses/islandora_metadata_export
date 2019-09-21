@@ -1,4 +1,4 @@
-name = Islandora Export Extra
+name = Islandora Metadata Export
 description = Exports a collection of objects to several formats (JSON, EndNote, RIS, BibText, etc) file.
 package = Islandora Solution Packs
 core = 7.x
