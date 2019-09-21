@@ -31,7 +31,7 @@ function citation_exporter_extra_block_configure($delta = '') {
 function citation_exporter_extra_block_info() {
   $blocks['islandora_export_formats'] = array(
     // The name that will appear in the block list.
-    'info' => t('Islandora Export to format from Object'),
+    'info' => t('Islandora Metadata Export'),
     // Default setting.
     'pages' => 'islandora/object/*',
     'cache' => DRUPAL_NO_CACHE,
