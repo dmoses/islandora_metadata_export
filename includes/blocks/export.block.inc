@@ -33,6 +33,7 @@ function citation_exporter_extra_block_info() {
     // The name that will appear in the block list.
     'info' => t('Islandora Export to format from Object'),
     // Default setting.
+    'visibility' => BLOCK_VISIBILITY_LISTED,
     'pages' => 'islandora/object/*',
     'cache' => DRUPAL_NO_CACHE,
   );
