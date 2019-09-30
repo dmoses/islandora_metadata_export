@@ -25,8 +25,6 @@ This module requires the following modules/libraries:
 
 ## Installation
 
-Run <pre>composer install</pre> at the root of the folder to install the required libraries.
-
 Install as usual, see [this](https://drupal.org/documentation/install/modules-themes/modules-7) for further information.
 
 ## Configuration
