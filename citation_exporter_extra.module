@@ -326,7 +326,7 @@ function citation_exporter_extra_preprocess_islandora_export_available_formats(&
   //$generate a list of potential new values!
   $variables['available_formats'] = theme_item_list([
     'items' => citation_exporter_extra_get_export_formats($variables['object']),
-    'title' => t('Downloadable format'),
+    'title' => t('Downloadable Formats'),
     'type' => 'ul',
     'attributes' => [],
   ]);
