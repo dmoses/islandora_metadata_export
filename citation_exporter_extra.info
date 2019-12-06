@@ -1,5 +1,5 @@
 name = Islandora Metadata Export
-description = Exports an object's metadata in several formats (JSON, EndNote, RIS, BIbtex, Dublic Core, MARC, MARCXML).
+description = Exports an object's metadata in several formats (JSON, EndNote, RIS, BIbTex, Dublic Core, MARC, MARCXML, MODS).
 package = Islandora Solution Packs
 core = 7.x
 php = 5.2
