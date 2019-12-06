@@ -42,6 +42,10 @@ function citation_exporter_extra_mods_download_format_alter(&$formats) {
       'url' => 'islandora/object/[fedora:pid]/download_mods_as_marcxml',
       'title' => 'Compatible with XML viewers'
     ),
+    'MODS' => array(
+      'url' => 'islandora/object/[fedora:pid]/datastream/MODS/download',
+      'title' => 'Compatible with XML viewers'
+    ),
     'DublinCore' => array(
       'url' => 'islandora/object/[fedora:pid]/datastream/DC/download',
       'title' => 'Compatible with XML viewers'

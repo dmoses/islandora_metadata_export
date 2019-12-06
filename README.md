@@ -8,6 +8,7 @@ Generates a block with metadata export options that can be embedded in any objec
 * EndNote
 * MARC
 * MARCXML
+* MODS
 * DublinCore
 * RIS
 
