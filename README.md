@@ -43,7 +43,7 @@ To fix you should follow the main Islandora Scholar install [dependency installa
 Enable the module via Administration » Modules (admin/modules). Using `admin/structure/block`, place the "Islandora Metadata Export" block in the desired region (a sidebar typically works well). Then click "configure" to expose the following options:
 
 * Give the block an optional title
-* Enable any of the available export formats: BibTex, EndNote, MARC, MARCXML, DublinCore, RIS, JSON
+* Enable any of the available export formats: BibTex, EndNote, MARC, MARCXML, MODS, DublinCore, RIS, JSON
 * In the "Pages" visibility section you can use wildcards to include/exclude paths from including the block. The default is "only show on: `islandora/object/*`"
 * In the "Roles" visibility section you can include/exclude certain Drupal user roles from seeing the block.
 
